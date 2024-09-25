@@ -39,7 +39,7 @@ annotate service.EstudiantesByCursos with @(
         {
             $Type : 'UI.ReferenceFacet',
             ID : 'GeneratedFacet1',
-            Label : 'General Information',
+            Label : 'Información General',
             Target : '@UI.FieldGroup#GeneratedGroup',
         },
     ],
