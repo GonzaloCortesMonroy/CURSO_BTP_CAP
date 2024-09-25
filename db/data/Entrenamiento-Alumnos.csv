@@ -1,0 +1,4 @@
+ID,NombreAlumno,FechaNacimiento,Telefono,Email,Status,Critico,Curso_ID,createdAt,createdBy,modifiedAt,modifiedBy
+b8840ce4-c770-4879-afe4-084a4618646d,Gonzalo CortesMonroy, 1978-09-03,+569 44108895,gcortesmonroym@gmail.com,I,1,3d26ee98-bcf6-4f38-a50f-7492d5251729,,,,
+b8940ce4-c770-4879-afe4-084a4618646d,Gonzalo CortesMonroy, 1978-09-03,+569 44108895,gcortesmonroym@gmail.com,P,2,3d26ee98-bcf6-4f38-a50f-7492d5251729,,,,
+b9040ce4-c770-4879-afe4-084a4618646d,Gonzalo CortesMonroy, 1978-09-03,+569 44108895,gcortesmonroym@gmail.com,A,3,3d26ee98-bcf6-4f38-a50f-7492d5251729,,,,
