@@ -1,172 +1,204 @@
 _schema-version: 3.3.0
 ID: Project_2
-description: A simple CAP project.
 version: 1.0.0
+description: "Projecto CAP"
 modules:
-- name: Project_2-srv
-  type: nodejs
-  path: gen/srv
-  requires:
-  - name: Project_2-auth
-  - name: Project_2-db
-  - name: Project_2-destination
-  provides:
-  - name: srv-api
-    properties:
-      srv-url: ${default-url}
-  parameters:
-    buildpack: nodejs_buildpack
-    readiness-health-check-http-endpoint: /health
-    readiness-health-check-type: http
-  build-parameters:
-    builder: npm
-- name: Project_2-db-deployer
-  type: hdb
-  path: gen/db
-  requires:
-  - name: Project_2-db
-  parameters:
-    buildpack: nodejs_buildpack
-- name: Project_2
-  type: approuter.nodejs
-  path: app/router
-  requires:
-  - name: srv-api
-    group: destinations
-    properties:
-      forwardAuthToken: true
-      name: srv-api
-      url: ~{srv-url}
-  - name: Project_2-destination
-  - name: Project_2-html5-runtime
-  parameters:
-    disk-quota: 256M
-    keep-existing-routes: true
-    memory: 256M
-- name: Project_2-app-deployer
-  type: com.sap.application.content
-  path: gen
-  requires:
-  - name: Project_2-html5-repo-host
-    parameters:
-      content-target: true
-  build-parameters:
-    build-result: app/
+  - name: Project_2-srv
+    type: nodejs
+    path: gen/srv
     requires:
-    - artifacts:
-      - alumnos.zip
-      name: alumnos
-      target-path: app//
-    - artifacts:
-      - cursos.zip
-      name: cursos
-      target-path: app//
-    - artifacts:
-      - alumnoscursos.zip
-      name: alumnoscursos
-      target-path: app//
-    - artifacts:
-      - estudiantebycursos.zip
-      name: estudiantebycursos
-      target-path: app//
-- name: alumnos
-  type: html5
-  path: app/alumnos
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    - npm ci
-    - npm run build
-    supported-platforms: []
-- name: cursos
-  type: html5
-  path: app/cursos
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    - npm ci
-    - npm run build
-    supported-platforms: []
-- name: alumnoscursos
-  type: html5
-  path: app/alumnos_cursos
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    supported-platforms: []
-- name: estudiantebycursos
-  type: html5
-  path: app/estudiantebycursos
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    supported-platforms: []
-resources:
-- name: Project_2-auth
-  type: org.cloudfoundry.managed-service
-  parameters:
-    config:
-      tenant-mode: dedicated
-      xsappname: Project_2-${org}-${space}
-    path: ./xs-security.json
-    service: xsuaa
-    service-plan: application
-- name: Project_2-db
-  type: com.sap.xs.hdi-container
-  parameters:
-    service: hana
-    service-plan: hdi-shared
-- name: Project_2-destination
-  type: org.cloudfoundry.managed-service
-  parameters:
-    config:
-      HTML5Runtime_enabled: false
-      init_data:
+      - name: Project_2-auth
+      - name: Project_2-db
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    parameters:
+      buildpack: nodejs_buildpack
+      readiness-health-check-type: http
+      readiness-health-check-http-endpoint: /health
+    build-parameters:
+      builder: npm
+
+  - name: Project_2-db-deployer
+    type: hdb
+    path: gen/db
+    requires:
+      - name: Project_2-db
+    parameters:
+      buildpack: nodejs_buildpack
+
+  - name: Project_2-app-deployer
+    type: com.sap.application.content
+    path: gen
+    requires:
+      - name: Project_2-html5-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: alumnos
+          artifacts:
+            - alumnos.zip
+          target-path: app//
+        - name: cursos
+          artifacts:
+            - cursos.zip
+          target-path: app//
+        - name: estudiantebycursos
+          artifacts:
+            - estudiantebycursos.zip
+          target-path: app//
+
+  - name: Project_2-destination-content
+    type: com.sap.application.content
+    requires:
+      - name: Project_2-destination-service
+        parameters:
+          content-target: true
+      - name: Project_2-html5-repo-host
+        parameters:
+          service-key:
+            name: Project_2-html5-repo-host-key
+      - name: Project_2-auth
+        parameters:
+          service-key:
+            name: Project_2-auth-key
+    parameters:
+      content:
         instance:
           destinations:
-          - Authentication: OAuth2UserTokenExchange
-            HTML5.DynamicDestination: true
-            HTML5.ForwardAuthToken: true
-            Name: Project_2-srv-api
-            ProxyType: Internet
-            Type: HTTP
-            URL: ~{srv-api/srv-url}
-          - Authentication: NoAuthentication
-            Name: ui5
-            ProxyType: Internet
-            Type: HTTP
-            URL: https://ui5.sap.com
-          existing_destinations_policy: update
-    service: destination
-    service-plan: lite
-- name: Project_2-html5-repo-host
-  type: org.cloudfoundry.managed-service
-  parameters:
-    service: html5-apps-repo
-    service-plan: app-host
-- name: Project_2-html5-runtime
-  type: org.cloudfoundry.managed-service
-  parameters:
-    service: html5-apps-repo
-    service-plan: app-runtime
+            - Name: Project_2_html5_repo_host
+              ServiceInstanceName: Project_2-html5-repo-host
+              ServiceKeyName: Project_2-html5-repo-host-key
+              sap.cloud.service: Project_2
+            - Authentication: OAuth2UserTokenExchange
+              Name: Project_2_Project_2_auth
+              ServiceInstanceName: Project_2-auth
+              ServiceKeyName: Project_2-auth-key
+              sap.cloud.service: Project_2
+          existing_destinations_policy: ignore
+    build-parameters:
+      no-source: true
+
+  - name: alumnos
+    type: html5
+    path: app/alumnos
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms:
+        []
+
+  - name: estudiantebycursos
+    type: html5
+    path: app/estudiantebycursos
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build:cf
+      supported-platforms:
+        []
+
+  - name: cursos
+    type: html5
+    path: app/cursos
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms:
+        []
+
+  - name: Project_2
+    type: approuter.nodejs
+    path: app/router
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: Project_2-auth
+      - name: Project_2-html5-runtime
+      
+resources:
+  - name: Project_2-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      config:
+        database_id: e7e89577-4a75-4c42-94a4-3503ef354df6
+      service: hana
+      service-plan: hdi-shared
+
+  - name: Project_2-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+  - name: Project_2-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: Project_2-${org}-${space}
+        tenant-mode: dedicated
+
+  - name: Project_2-destination-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            destinations:
+              - Authentication: NoAuthentication
+                Name: ui5
+                ProxyType: Internet
+                Type: HTTP
+                URL: https://ui5.sap.com
+              - Authentication: NoAuthentication
+                HTML5.DynamicDestination: true
+                HTML5.ForwardAuthToken: true
+                Name: srv-api
+                ProxyType: Internet
+                Type: HTTP
+                URL: ~{srv-api/srv-url}
+            existing_destinations_policy: update
+        version: 1.0.0
+      service: destination
+      service-name: Project_2-destination-service
+      service-plan: lite
+    requires:
+      - name: srv-api
+  - name: Project_2-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+
 parameters:
   deploy_mode: html5-repo
   enable-parallel-deployments: true
 build-parameters:
   before-all:
-  - builder: custom
-    commands:
-    - npm ci
-    - npx cds build --production
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production

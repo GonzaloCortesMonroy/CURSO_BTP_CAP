@@ -22,6 +22,8 @@ service AdminService {
     annotate Cursos with @odata.draft.bypass;
 
 }
+annotate AdminService with @(requires: 'admin');
+
 
 service EstudiantesService {
 
@@ -39,6 +41,7 @@ view EstudiantesByCursos as select from Entrenamiento.Cursos as CursosAlumnos
 }
   
 }
+annotate EstudiantesService with @(requires: 'viewer');
 
 annotate AdminService.inText:Comentario with @Common.Label : 'Comentario';
 annotate AdminService.inText:Comentario with @UI.MultiLineText:true;
